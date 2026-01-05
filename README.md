@@ -25,7 +25,7 @@ Add the dependency to your `build.gradle.kts`:
 ```kotlin
 // For common/shared module
 commonMain.dependencies {
-    implementation("io.github.samuolis:timeago-kmp:0.1.1")
+    implementation("io.github.samuolis:timeago-kmp:0.1.2")
 }
 ```
 
@@ -41,7 +41,7 @@ Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/samuolis/timeago-kmp", from: "0.1.1")
+    .package(url: "https://github.com/samuolis/timeago-kmp", from: "0.1.2")
 ]
 ```
 
