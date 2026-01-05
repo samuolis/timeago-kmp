@@ -1,0 +1,196 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Cache Kotlin Native
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-konan-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Read current version
+        id: current_version
+        run: |
+          source version.properties
+          echo "major=$VERSION_MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$VERSION_MINOR" >> $GITHUB_OUTPUT
+          echo "patch=$VERSION_PATCH" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+
+      - name: Calculate new version
+        id: new_version
+        run: |
+          MAJOR=${{ steps.current_version.outputs.major }}
+          MINOR=${{ steps.current_version.outputs.minor }}
+          PATCH=${{ steps.current_version.outputs.patch }}
+
+          if [ "${{ inputs.bump }}" = "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MINOR" >> $GITHUB_OUTPUT
+          echo "patch=$PATCH" >> $GITHUB_OUTPUT
+          echo "New version: $VERSION"
+
+      - name: Update version.properties
+        run: |
+          cat > version.properties << EOF
+          VERSION_MAJOR=${{ steps.new_version.outputs.major }}
+          VERSION_MINOR=${{ steps.new_version.outputs.minor }}
+          VERSION_PATCH=${{ steps.new_version.outputs.patch }}
+          EOF
+          cat version.properties
+
+      - name: Build XCFramework
+        run: ./gradlew :timeago-kmp:assembleTimeAgoKMPReleaseXCFramework
+
+      - name: Zip XCFramework
+        run: |
+          cd timeago-kmp/build/XCFrameworks/release
+          zip -r TimeAgoKMP.xcframework.zip TimeAgoKMP.xcframework
+          echo "XCFRAMEWORK_PATH=$(pwd)/TimeAgoKMP.xcframework.zip" >> $GITHUB_ENV
+
+      - name: Calculate checksum
+        id: checksum
+        run: |
+          CHECKSUM=$(swift package compute-checksum ${{ env.XCFRAMEWORK_PATH }})
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "Checksum: $CHECKSUM"
+
+      - name: Update Package.swift
+        run: |
+          VERSION="${{ steps.new_version.outputs.version }}"
+          CHECKSUM="${{ steps.checksum.outputs.checksum }}"
+
+          cat > Package.swift << EOF
+          // swift-tools-version:5.9
+          import PackageDescription
+
+          let package = Package(
+              name: "TimeAgoKMP",
+              platforms: [
+                  .iOS(.v14),
+                  .macOS(.v12)
+              ],
+              products: [
+                  .library(
+                      name: "TimeAgoKMP",
+                      targets: ["TimeAgoKMP"]
+                  )
+              ],
+              targets: [
+                  .binaryTarget(
+                      name: "TimeAgoKMP",
+                      url: "https://github.com/samuolis/timeago-kmp/releases/download/v${VERSION}/TimeAgoKMP.xcframework.zip",
+                      checksum: "${CHECKSUM}"
+                  )
+              ]
+          )
+          EOF
+
+          cat Package.swift
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.properties Package.swift
+          git commit -m "Release v${{ steps.new_version.outputs.version }}"
+          git push
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.new_version.outputs.version }}
+          name: v${{ steps.new_version.outputs.version }}
+          body: |
+            ## TimeAgo KMP v${{ steps.new_version.outputs.version }}
+
+            ### Installation
+
+            **Kotlin/Android (Maven Central):**
+            ```kotlin
+            implementation("io.github.samuolis:timeago-kmp:${{ steps.new_version.outputs.version }}")
+            ```
+
+            **Swift Package Manager:**
+            Add `https://github.com/samuolis/timeago-kmp` in Xcode Package Dependencies.
+
+            ### Checksums
+            - XCFramework: `${{ steps.checksum.outputs.checksum }}`
+          files: ${{ env.XCFRAMEWORK_PATH }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          ./gradlew publishAllPublicationsToMavenCentralRepository \
+            -PVERSION_NAME=${{ steps.new_version.outputs.version }} \
+            --no-daemon \
+            --no-configuration-cache
+
+      - name: Release Summary
+        run: |
+          echo "## Release v${{ steps.new_version.outputs.version }} Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts Published:" >> $GITHUB_STEP_SUMMARY
+          echo "- Maven Central: \`io.github.samuolis:timeago-kmp:${{ steps.new_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Swift Package: \`https://github.com/samuolis/timeago-kmp\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### XCFramework Checksum:" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ steps.checksum.outputs.checksum }}\`" >> $GITHUB_STEP_SUMMARY
