@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 }
 
 include(":timeago-kmp")
+include(":sample")

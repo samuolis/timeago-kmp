@@ -26,3 +26,18 @@ local.properties
 # Signing
 secring.gpg
 /.kotlin/*
+
+# Xcode
+*.xcuserstate
+*.xcworkspace
+!iosApp/iosApp.xcodeproj
+xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# JS
+kotlin-js-store/
+node_modules/
