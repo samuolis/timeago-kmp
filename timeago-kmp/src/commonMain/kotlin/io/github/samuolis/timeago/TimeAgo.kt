@@ -170,3 +170,79 @@ private object EnglishLocale : TimeAgoLocale {
     override val inOneYear = "in 1 year"
     override fun inYears(years: Long) = "in $years years"
 }
+
+// Swift-friendly API (Duration is an inline class and doesn't export well)
+
+/**
+ * Formats elapsed seconds into a human-readable "time ago" string.
+ * Use this from Swift/Objective-C.
+ *
+ * @param seconds The number of seconds elapsed (positive for past, negative for future)
+ * @param locale Optional locale for custom translations
+ * @return A human-readable string like "5 minutes ago"
+ */
+public fun timeAgoFromSeconds(seconds: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+    return seconds.seconds.timeAgo(locale)
+}
+
+/**
+ * Formats elapsed minutes into a human-readable "time ago" string.
+ * Use this from Swift/Objective-C.
+ */
+public fun timeAgoFromMinutes(minutes: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+    return minutes.minutes.timeAgo(locale)
+}
+
+/**
+ * Formats elapsed hours into a human-readable "time ago" string.
+ * Use this from Swift/Objective-C.
+ */
+public fun timeAgoFromHours(hours: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+    return hours.hours.timeAgo(locale)
+}
+
+/**
+ * Formats elapsed days into a human-readable "time ago" string.
+ * Use this from Swift/Objective-C.
+ */
+public fun timeAgoFromDays(days: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+    return days.days.timeAgo(locale)
+}
+
+/**
+ * Helper object for Swift interop - provides static-like access to timeAgo functions.
+ */
+public object TimeAgo {
+    /**
+     * Formats elapsed seconds into a human-readable "time ago" string.
+     */
+    public fun fromSeconds(seconds: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+        return seconds.seconds.timeAgo(locale)
+    }
+
+    /**
+     * Formats elapsed minutes into a human-readable "time ago" string.
+     */
+    public fun fromMinutes(minutes: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+        return minutes.minutes.timeAgo(locale)
+    }
+
+    /**
+     * Formats elapsed hours into a human-readable "time ago" string.
+     */
+    public fun fromHours(hours: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+        return hours.hours.timeAgo(locale)
+    }
+
+    /**
+     * Formats elapsed days into a human-readable "time ago" string.
+     */
+    public fun fromDays(days: Long, locale: TimeAgoLocale = TimeAgoLocale.English): String {
+        return days.days.timeAgo(locale)
+    }
+
+    /**
+     * Default English locale.
+     */
+    public val englishLocale: TimeAgoLocale = TimeAgoLocale.English
+}
