@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
+group = "io.github.samuolis"
+
 kotlin {
     // Explicit API mode - forces visibility modifiers and return types
     explicitApi()
