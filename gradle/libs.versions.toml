@@ -1,0 +1,12 @@
+[versions]
+kotlin = "2.3.0"
+agp = "8.7.3"
+mavenPublish = "0.30.0"
+
+[libraries]
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
