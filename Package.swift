@@ -1,13 +1,6 @@
 // swift-tools-version:5.9
 import PackageDescription
 
-// This Package.swift is auto-generated during release.
-// Do not edit manually - it will be overwritten by CI.
-//
-// To use this package, add it to your Xcode project:
-// File > Add Package Dependencies > Enter repository URL:
-// https://github.com/samuolis/timeago-kmp
-
 let package = Package(
     name: "TimeAgoKMP",
     platforms: [
@@ -21,11 +14,10 @@ let package = Package(
         )
     ],
     targets: [
-        // Binary target will be added after first release
-        // .binaryTarget(
-        //     name: "TimeAgoKMP",
-        //     url: "https://github.com/samuolis/timeago-kmp/releases/download/v0.1.0/TimeAgoKMP.xcframework.zip",
-        //     checksum: "<checksum>"
-        // )
+        .binaryTarget(
+            name: "TimeAgoKMP",
+            url: "https://github.com/samuolis/timeago-kmp/releases/download/v0.1.1/TimeAgoKMP.xcframework.zip",
+            checksum: "b31416997190c98d6fc0dfede336345eb09ca62d1fca8134ae9d206f3a8f318b"
+        )
     ]
 )
