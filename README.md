@@ -3,6 +3,7 @@
 A lightweight Kotlin Multiplatform library for formatting durations into human-readable "time ago" strings.
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.samuolis/timeago-kmp)](https://central.sonatype.com/artifact/io.github.samuolis/timeago-kmp)
+[![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager/)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -10,24 +11,43 @@ A lightweight Kotlin Multiplatform library for formatting durations into human-r
 
 - **Zero dependencies** - Uses only `kotlin.time.Duration` from Kotlin stdlib
 - **Multiplatform** - Android, iOS, macOS, JVM, JS, WasmJS, Linux, Windows
-- **Lightweight** - Single file, ~150 lines of code
+- **Swift Package Manager** - Native iOS/macOS support via XCFramework
+- **Lightweight** - Single file, minimal code
 - **Customizable** - Bring your own translations via `TimeAgoLocale`
 - **Future support** - Handles both past and future durations
 
 ## Installation
+
+### Kotlin/Android (Maven Central)
 
 Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 // For common/shared module
 commonMain.dependencies {
-    implementation("io.github.samuolis:timeago-kmp:0.1.0")
+    implementation("io.github.samuolis:timeago-kmp:0.1.1")
 }
+```
+
+### Swift Package Manager (iOS/macOS)
+
+In Xcode: **File** → **Add Package Dependencies** → Enter:
+
+```
+https://github.com/samuolis/timeago-kmp
+```
+
+Or add to your `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/samuolis/timeago-kmp", from: "0.1.1")
+]
 ```
 
 ## Usage
 
-### Basic Usage
+### Kotlin
 
 ```kotlin
 import io.github.samuolis.timeago.timeAgo
@@ -39,34 +59,51 @@ import kotlin.time.Duration.Companion.days
 1.hours.timeAgo()        // "1 hour ago"
 2.days.timeAgo()         // "2 days ago"
 45.seconds.timeAgo()     // "just now"
+
+// Future times
+(-1).days.timeAgo()      // "tomorrow"
+(-3).hours.timeAgo()     // "in 3 hours"
 ```
 
-### With Instant (calculating elapsed time)
+### Swift
 
-```kotlin
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
+```swift
+import TimeAgoKMP
 
-val pastTime = Clock.System.now() - 2.hours
-val elapsed = Clock.System.now() - pastTime
-elapsed.timeAgo() // "2 hours ago"
+// Using TimeAgo object
+TimeAgo.shared.fromSeconds(seconds: 30)    // "just now"
+TimeAgo.shared.fromMinutes(minutes: 5)     // "5 minutes ago"
+TimeAgo.shared.fromHours(hours: 2)         // "2 hours ago"
+TimeAgo.shared.fromDays(days: 1)           // "yesterday"
+
+// Future times (negative values)
+TimeAgo.shared.fromDays(days: -1)          // "tomorrow"
+
+// Or using top-level functions
+TimeAgoKt.timeAgoFromSeconds(seconds: 300) // "5 minutes ago"
 ```
 
-### Future Durations
+### Swift Date Extension
 
-Negative durations are formatted as future times:
+```swift
+import Foundation
+import TimeAgoKMP
 
-```kotlin
-import kotlin.time.Duration.Companion.days
+extension Date {
+    func timeAgo() -> String {
+        let seconds = Int64(Date().timeIntervalSince(self))
+        return TimeAgo.shared.fromSeconds(seconds: seconds)
+    }
+}
 
-(-1).days.timeAgo()  // "tomorrow"
-(-3).hours.timeAgo() // "in 3 hours"
+// Usage
+let postDate = Date().addingTimeInterval(-7200)
+print(postDate.timeAgo()) // "2 hours ago"
 ```
 
 ### Custom Locale
 
-Implement `TimeAgoLocale` for custom translations:
-
+**Kotlin:**
 ```kotlin
 object GermanLocale : TimeAgoLocale {
     override val justNow = "gerade eben"
