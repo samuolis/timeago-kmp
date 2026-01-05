@@ -1,6 +1,7 @@
 import com.vanniktech.maven.publish.SonatypeHost
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.JavadocJar
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -14,6 +15,10 @@ kotlin {
     // Explicit API mode - forces visibility modifiers and return types
     explicitApi()
 
+    // XCFramework for SPM distribution
+    val xcframeworkName = "TimeAgoKMP"
+    val xcf = XCFramework(xcframeworkName)
+
     // Android target
     androidTarget {
         compilerOptions {
@@ -25,14 +30,32 @@ kotlin {
     // JVM target
     jvm()
 
-    // iOS targets
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+    // iOS targets with XCFramework
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = xcframeworkName
+            binaryOption("bundleId", "io.github.samuolis.timeago")
+            xcf.add(this)
+            isStatic = true
+        }
+    }
 
-    // macOS targets
-    macosX64()
-    macosArm64()
+    // macOS targets with XCFramework
+    listOf(
+        macosX64(),
+        macosArm64()
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = xcframeworkName
+            binaryOption("bundleId", "io.github.samuolis.timeago")
+            xcf.add(this)
+            isStatic = true
+        }
+    }
 
     // JavaScript targets
     js(IR) {
