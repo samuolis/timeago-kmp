@@ -235,6 +235,11 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Upgrade npm for OIDC support
+        run: |
+          npm install -g npm@latest
+          npm --version
+
       - name: Verify package
         run: |
           cd npm-package
@@ -244,7 +249,7 @@ jobs:
       - name: Publish to npm
         run: |
           cd npm-package
-          npm publish
+          npm publish --access public
 
       - name: Release Summary
         run: |
