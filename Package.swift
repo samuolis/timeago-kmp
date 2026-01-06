@@ -16,8 +16,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "TimeAgoKMP",
-            url: "https://github.com/samuolis/timeago-kmp/releases/download/v0.1.2/TimeAgoKMP.xcframework.zip",
-            checksum: "fb9eac171c80ed613b368a8f6f580d31df5d34bc24d4c7834afa03ba8a349f61"
+            url: "https://github.com/samuolis/timeago-kmp/releases/download/v0.1.3/TimeAgoKMP.xcframework.zip",
+            checksum: "2f3ac066a7ee444d8a989e4cef63b4a416c242ebcccb67e499d28c8da5ac4a27"
         )
     ]
 )
