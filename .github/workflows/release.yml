@@ -223,12 +223,6 @@ jobs:
       id-token: write
 
     steps:
-      - name: Download npm package
-        uses: actions/download-artifact@v4
-        with:
-          name: npm-package
-          path: npm-package
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -244,7 +238,7 @@ jobs:
       - name: Publish to npm
         run: |
           cd npm-package
-          npm publish --access public --provenance
+          npm publish
 
       - name: Release Summary
         run: |
