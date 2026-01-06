@@ -57,9 +57,34 @@ kotlin {
 
     // JavaScript targets
     js(IR) {
+        compilerOptions {
+            moduleName.set("timeago-kmp")
+        }
         browser()
         nodejs()
         binaries.library()
+        generateTypeScriptDefinitions()
+
+        compilations["main"].packageJson {
+            customField("description", "Kotlin Multiplatform library for human-readable relative time formatting")
+            customField("keywords", arrayOf("time", "ago", "duration", "relative-time", "kotlin", "multiplatform", "kmp"))
+            customField("author", mapOf(
+                "name" to "Lukas Samuolis",
+                "url" to "https://github.com/samuolis"
+            ))
+            customField("license", "MIT")
+            customField("repository", mapOf(
+                "type" to "git",
+                "url" to "https://github.com/samuolis/timeago-kmp.git"
+            ))
+            customField("bugs", mapOf(
+                "url" to "https://github.com/samuolis/timeago-kmp/issues"
+            ))
+            customField("homepage", "https://github.com/samuolis/timeago-kmp#readme")
+            customField("publishConfig", mapOf(
+                "access" to "public"
+            ))
+        }
     }
 
     // WebAssembly JS target
@@ -68,6 +93,7 @@ kotlin {
         browser()
         nodejs()
         binaries.library()
+        generateTypeScriptDefinitions()
     }
 
     // Linux targets
@@ -100,6 +126,42 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+// Fix npm package name after JS distribution is built
+tasks.register("fixNpmPackageName") {
+    dependsOn("jsNodeProductionLibraryDistribution")
+    doLast {
+        val packageJsonFile = file("build/dist/js/productionLibrary/package.json")
+        if (packageJsonFile.exists()) {
+            var content = packageJsonFile.readText()
+            // Fix the package name (remove the duplicate project name prefix)
+            content = content.replace(
+                "\"name\": \"timeago-kmp-timeago-kmp\"",
+                "\"name\": \"timeago-kmp\""
+            )
+            // Fix the main entry point
+            content = content.replace(
+                "\"main\": \"timeago-kmp-timeago-kmp.js\"",
+                "\"main\": \"timeago-kmp.js\""
+            )
+            // Fix the types entry point
+            content = content.replace(
+                "\"types\": \"timeago-kmp-timeago-kmp.d.ts\"",
+                "\"types\": \"timeago-kmp.d.ts\""
+            )
+            packageJsonFile.writeText(content)
+
+            // Rename the JS and d.ts files
+            val jsDir = file("build/dist/js/productionLibrary")
+            jsDir.listFiles()?.forEach { file ->
+                if (file.name.startsWith("timeago-kmp-timeago-kmp")) {
+                    val newName = file.name.replace("timeago-kmp-timeago-kmp", "timeago-kmp")
+                    file.renameTo(File(jsDir, newName))
+                }
+            }
+        }
     }
 }
 

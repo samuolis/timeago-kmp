@@ -3,6 +3,7 @@
 A lightweight Kotlin Multiplatform library for formatting durations into human-readable "time ago" strings.
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.samuolis/timeago-kmp)](https://central.sonatype.com/artifact/io.github.samuolis/timeago-kmp)
+[![npm](https://img.shields.io/npm/v/timeago-kmp)](https://www.npmjs.com/package/timeago-kmp)
 [![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager/)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -12,6 +13,7 @@ A lightweight Kotlin Multiplatform library for formatting durations into human-r
 - **Zero dependencies** - Uses only `kotlin.time.Duration` from Kotlin stdlib
 - **Multiplatform** - Android, iOS, macOS, JVM, JS, WasmJS, Linux, Windows
 - **Swift Package Manager** - Native iOS/macOS support via XCFramework
+- **npm** - JavaScript/TypeScript support with type definitions
 - **Lightweight** - Single file, minimal code
 - **Customizable** - Bring your own translations via `TimeAgoLocale`
 - **Future support** - Handles both past and future durations
@@ -43,6 +45,18 @@ Or add to your `Package.swift`:
 dependencies: [
     .package(url: "https://github.com/samuolis/timeago-kmp", from: "0.1.2")
 ]
+```
+
+### npm (JavaScript/TypeScript)
+
+```bash
+npm install timeago-kmp
+```
+
+Or with yarn:
+
+```bash
+yarn add timeago-kmp
 ```
 
 ## Usage
@@ -81,6 +95,28 @@ TimeAgo.shared.fromDays(days: -1)          // "tomorrow"
 
 // Or using top-level functions
 TimeAgoKt.timeAgoFromSeconds(seconds: 300) // "5 minutes ago"
+```
+
+### JavaScript/TypeScript
+
+```javascript
+// ES Modules
+import { TimeAgo } from 'timeago-kmp';
+
+TimeAgo.fromSeconds(30);     // "just now"
+TimeAgo.fromMinutes(5);      // "5 minutes ago"
+TimeAgo.fromHours(2);        // "2 hours ago"
+TimeAgo.fromDays(1);         // "yesterday"
+
+// Future times (negative values)
+TimeAgo.fromDays(-1);        // "tomorrow"
+```
+
+```javascript
+// CommonJS
+const { TimeAgo } = require('timeago-kmp');
+
+TimeAgo.fromSeconds(300);    // "5 minutes ago"
 ```
 
 ### Swift Date Extension
