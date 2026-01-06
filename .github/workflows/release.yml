@@ -19,10 +19,11 @@ jobs:
   release:
     name: Release
     runs-on: macos-latest
+    outputs:
+      version: ${{ steps.new_version.outputs.version }}
 
     permissions:
       contents: write
-      id-token: write  # Required for npm provenance/trusted publishing
 
     steps:
       - name: Checkout
@@ -35,12 +36,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -212,25 +207,46 @@ jobs:
       - name: Build npm package
         run: ./gradlew :timeago-kmp:fixNpmPackageName --no-daemon
 
-      - name: Verify npm package
+      - name: Upload npm package
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: timeago-kmp/build/dist/js/productionLibrary/
+
+  publish-npm:
+    name: Publish to npm
+    needs: release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download npm package
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: npm-package
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify package
         run: |
-          cd timeago-kmp/build/dist/js/productionLibrary
+          cd npm-package
           cat package.json
           ls -la
 
       - name: Publish to npm
         run: |
-          cd timeago-kmp/build/dist/js/productionLibrary
+          cd npm-package
           npm publish --access public --provenance
 
       - name: Release Summary
         run: |
-          echo "## Release v${{ steps.new_version.outputs.version }} Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts Published:" >> $GITHUB_STEP_SUMMARY
-          echo "- Maven Central: \`io.github.samuolis:timeago-kmp:${{ steps.new_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Swift Package: \`https://github.com/samuolis/timeago-kmp\`" >> $GITHUB_STEP_SUMMARY
-          echo "- npm: \`timeago-kmp@${{ steps.new_version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### XCFramework Checksum:" >> $GITHUB_STEP_SUMMARY
-          echo "\`${{ steps.checksum.outputs.checksum }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "## npm Release Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "Published: \`timeago-kmp@${{ needs.release.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
