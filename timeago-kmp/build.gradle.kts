@@ -167,7 +167,7 @@ tasks.register("fixNpmPackageName") {
 
 // Maven Central Publishing Configuration
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
     signAllPublications()
 
     configure(KotlinMultiplatform(
