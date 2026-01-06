@@ -40,7 +40,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Note: Not setting registry-url to allow OIDC Trusted Publishing
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -218,12 +218,9 @@ jobs:
           cat package.json
           ls -la
 
-      - name: Publish to npm (OIDC Trusted Publishing)
+      - name: Publish to npm
         run: |
           cd timeago-kmp/build/dist/js/productionLibrary
-          # Clear any cached credentials to force OIDC
-          npm config delete //registry.npmjs.org/:_authToken || true
-          # Publish with provenance using OIDC
           npm publish --access public --provenance
 
       - name: Release Summary
