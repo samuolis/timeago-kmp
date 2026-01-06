@@ -223,6 +223,12 @@ jobs:
       id-token: write
 
     steps:
+      - name: Download npm package
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: npm-package
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
